@@ -4,7 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\UpdateCommentRequest;
+use App\Http\Resources\CommentResource;
 use App\Models\Comment;
+use App\Repositories\CommentRepository;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CommentController extends Controller
 {
@@ -13,20 +17,17 @@ class CommentController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         //
+
+        $pageSize = $request->page_size ?? 20;
+        $comments = Comment::query()->paginate($pageSize);
+
+        return CommentResource::collection($comments);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
+
 
     /**
      * Store a newly created resource in storage.
@@ -34,9 +35,23 @@ class CommentController extends Controller
      * @param  \App\Http\Requests\StoreCommentRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(StoreCommentRequest $request)
+    public function store(Request $request, CommentRepository $repository)
     {
         //
+       $created =  $repository->create($request->only(
+        [
+            'body',
+            'user_id',
+            'post_id'
+        ]
+        ));
+
+        
+
+
+        return new JsonResponse([
+            'data' => $created,
+        ]);
     }
 
     /**
@@ -48,18 +63,11 @@ class CommentController extends Controller
     public function show(Comment $comment)
     {
         //
+
+        return new CommentResource($comment);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Comment  $comment
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Comment $comment)
-    {
-        //
-    }
+
 
     /**
      * Update the specified resource in storage.
@@ -68,9 +76,17 @@ class CommentController extends Controller
      * @param  \App\Models\Comment  $comment
      * @return \Illuminate\Http\Response
      */
-    public function update(UpdateCommentRequest $request, Comment $comment)
+    public function update(Request $request, Comment $comment, CommentRepository $repository)
     {
         //
+
+        $comment = $repository->update($comment, $request->only([
+            'body',
+            'user_id',
+            'post_id'
+        ]));
+
+        return new CommentResource($comment);
     }
 
     /**
@@ -79,8 +95,13 @@ class CommentController extends Controller
      * @param  \App\Models\Comment  $comment
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Comment $comment)
+    public function destroy(Comment $comment, CommentRepository $repository)
     {
-        //
+
+    $repository->forceDelete($comment);
+
+    return new JsonResponse([
+        'data' => 'success'
+    ]);
     }
 }
