@@ -1,20 +1,25 @@
 <?php
 namespace App\Repositories;
 
+use App\Exceptions\GeneralJsonException;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+
 class UserRepository extends BaseRepository
 {
 
     public function create(array $attributes)
     {
         return  DB::transaction(function() use ($attributes) {
-            $comment = DB::query()->create(
+            $user = User::query()->create(
                 [
                     'name' => data_get($attributes, 'name'),
                     'email' => data_get($attributes, 'email'),
+                    'password' => 'dlfklsdkflk'
                 ]
             );
 
-            return $comment;
+            return $user;
         });
     }
 
@@ -36,13 +41,14 @@ class UserRepository extends BaseRepository
 
     public function forceDelete($model)
     {
+      
         return DB::transaction(function() use ($model) {
 
-            $deleted = $mode->forceDelete();
+            $deleted = $model->forceDelete();
 
             throw_if(!$deleted, GeneralJsonException::class, 'Failed to deleted');
 
             return $deleted;
-        })
+        });
     }
 }

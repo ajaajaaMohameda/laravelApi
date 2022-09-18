@@ -47,6 +47,6 @@ class CommentRepository extends BaseRepository
 
 
             return $deleted;
-        })
+        });
     }
 }

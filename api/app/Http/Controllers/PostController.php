@@ -6,9 +6,11 @@ use App\Http\Requests\StorePostRequest;
 use App\Http\Resources\PostResource;
 use App\Models\Post;
 use App\Repositories\PostRepository;
+use App\Rules\integerArray;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class PostController extends Controller
 {
@@ -37,11 +39,24 @@ class PostController extends Controller
     {
         //
 
-        $created = $repository->create($request->only([
+        $payload = $request->only([
             'name',
             'body',
             'user_ids'
-        ]));
+        ]);
+
+        Validator::validate($payload, [
+            'name' => ['string', 'required'],
+            'body' => ['string', 'required'],
+            'user_ids' => [
+                'array',
+                'required',
+                new integerArray()
+            ]
+            ],[
+                'user_ids' => 'User ids'
+            ]);
+        $created = $repository->create($payload);
 
         return new PostResource($created);
     }
